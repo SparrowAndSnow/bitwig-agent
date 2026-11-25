@@ -1,13 +1,11 @@
 """Python/Java contract parity: send schema-derived bound vectors straight to the Java validator.
 
-Imported by smoke-mcp-java.py and run against its fixture RpcServer. For every
+Imported by smoke-mcp-java.py and run against its Java HTTP MCP fixture. For every
 method, walk the pydantic JSON schema; each numeric/length/item bound is sent at
 the bound (accept) and just beyond it (reject), and every optional field the
-catalog examples never include is sent once. The raw TCP request bypasses the
-Python adapter, so the JVM's own validator decides; its verdict must equal
-pydantic's. No codegen: vectors are derived from the schema at run time.
+catalog examples never include is sent once. The fixture compares verdicts
+from the Java host validator to those of the reference Pydantic models.
 """
-import asyncio
 import copy
 import json
 import math
@@ -217,16 +215,10 @@ def python_verdict(method, params):
         return False
 
 
-async def java_verdict(port, method, params):
-    reader, writer = await asyncio.open_connection("127.0.0.1", port, limit=1 << 21)
-    try:
-        request = {"id": "parity", "method": method, "params": params, "timeoutMs": 5000}
-        writer.write((json.dumps(request, separators=(",", ":")) + "\n").encode())
-        await writer.drain()
-        response = json.loads(await asyncio.wait_for(reader.readline(), 10))
-    finally:
-        writer.close()
-    error = response.get("error")
+async def java_verdict(session, method, params):
+    response = await session.call_tool(method, params)
+    payload = response.structured_content or json.loads(response.content[0].text)
+    error = payload.get("error")
     return error is None or error["code"] == "fixture_unknown", error
 
 
@@ -263,7 +255,7 @@ def cases(method):
                 yield f"{method}:{name} {label}", params, name, "accept" if accept else "reject"
 
 
-async def run(port):
+async def run(session):
     """Compare both validators on every vector; return the number checked."""
     checked = 0
     problems = []
@@ -276,7 +268,7 @@ async def run(port):
                 continue
             seen.add(key)
             py = python_verdict(method, params)
-            java, error = await java_verdict(port, method, params)
+            java, error = await java_verdict(session, method, params)
             checked += 1
             if py != java:
                 problems.append(f"MISMATCH {label}: python={'accept' if py else 'reject'} java={'accept' if java else 'reject'} {error}")

@@ -17,7 +17,7 @@ uv run --locked python scripts/build.py
 uv run --locked bitwig-agent-install --extension build/BitwigAgent.bwextension
 ```
 
-The API JAR defaults to `/opt/bitwig-studio/bin/bitwig.jar`; override it for your installation. The build downloads and verifies pinned Gson on first use. Neither the proprietary host JAR nor JDK is bundled. Installation does not enable the controller: follow [the enable/connect steps](README.md#2-enable-in-bitwig). For a checkout-based MCP configuration, run `uv run --locked bitwig-agent-install --mcp-config`; keep the checkout environment available to the client.
+The API JAR defaults to `/opt/bitwig-studio/bin/bitwig.jar`; override it for your installation. The build downloads and verifies pinned Gson on first use. Neither the proprietary host JAR nor JDK is bundled. Installation does not enable the controller: follow [the enable/connect steps](README.md#2-enable-in-bitwig). The extension serves Streamable HTTP at `http://127.0.0.1:61172/mcp`. Update the bundled schema resource and host method registry together when adding tools.
 
 ## Development checks
 
@@ -88,7 +88,7 @@ This command fetches a validation tool; it is not a production DAW dependency. F
 
 ## Repository map and architecture
 
-See [architecture and ownership](docs/architecture.md) for the detailed public-code walkthrough. Python MCP stdio and CLI entrypoints share a strict schema/catalog and loopback client. The Java extension dispatches bounded newline-delimited JSON requests through host scheduling into separate domains. Bitwig owns the project/audio engine; the bridge is not a complete project mirror and never automatically retries requests.
+See [architecture and ownership](docs/architecture.md) for the detailed public-code walkthrough. The Java extension serves MCP directly through a loopback HTTP listener. The Java extension dispatches bounded newline-delimited JSON requests through host scheduling into separate domains. Bitwig owns the project/audio engine; the bridge is not a complete project mirror and never automatically retries requests.
 
 | Path | Responsibility |
 |---|---|

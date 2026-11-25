@@ -114,9 +114,7 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(argv)
     if args.mcp_config:
         print(json.dumps({"mcpServers": {"bitwig-agent": {
-            "command": sys.executable,
-            "args": ["-m", "bitwig_agent"],
-            "env": {"BITWIG_AGENT_PORT": "61172"},
+            "url": "http://127.0.0.1:61172/mcp",
         }}}, indent=2))
         return
     try:

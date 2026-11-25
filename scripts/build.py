@@ -38,16 +38,18 @@ def gson_jar():
     return target
 
 
-def classes_digest(classes):
-    """Content hash of compiled classes, so two uncommitted builds of one commit stay distinguishable."""
+def extension_digest(classes, resources):
+    """Hash classes and packaged resources to distinguish uncommitted builds."""
     digest = hashlib.sha256()
-    for path in sorted(classes.rglob("*.class")):
-        digest.update(path.relative_to(classes).as_posix().encode() + b"\0" + path.read_bytes())
+    for directory in (classes, resources):
+        for path in sorted(directory.rglob("*")):
+            if path.is_file():
+                digest.update(path.relative_to(directory).as_posix().encode() + b"\0" + path.read_bytes())
     return digest.hexdigest()[:12]
 
 
-def build_properties(classes):
-    """Package version, git short SHA with dirty flag ("unknown" outside git), and a class-content hash."""
+def build_properties(classes, resources):
+    """Package version, git short SHA with dirty flag, and an extension-content hash."""
     version = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
     try:
         git = lambda *args: subprocess.run(["git", "-C", str(ROOT), *args], check=True,
@@ -57,7 +59,7 @@ def build_properties(classes):
             build += "-dirty"
     except (OSError, subprocess.CalledProcessError):
         build = "unknown"
-    return f"version={version}\nbuild={build}+{classes_digest(classes)}\n"
+    return f"version={version}\nbuild={build}+{extension_digest(classes, resources)}\n"
 
 
 def compile_java(sources, target, classpath):
@@ -75,7 +77,10 @@ def build():
     classes = BUILD / "classes"
     if classes.exists():
         shutil.rmtree(classes)
-    compile_java(sorted((ROOT / "extension/src/main/java").rglob("*.java")), classes, [api, dependency])
+    # The private Grid insertion adapter requires the exact 6.1.4 host JAR.
+    sources = [path for path in sorted((ROOT / "extension/src/main/java").rglob("*.java"))
+               if path.name != "BitwigAgent614GridInsertion.java"]
+    compile_java(sources, classes, [api, dependency])
     resources = ROOT / "extension/src/main/resources"
     service = resources / "META-INF/services/com.bitwig.extension.ExtensionDefinition"
     if not service.is_file():
@@ -88,7 +93,7 @@ def build():
     output = BUILD / "BitwigAgent.bwextension"
     with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n\n")
-        archive.writestr("bitwig-agent-build.properties", build_properties(classes))
+        archive.writestr("bitwig-agent-build.properties", build_properties(classes, resources))
         for directory in [classes, ROOT / "extension/src/main/resources"]:
             if directory.exists():
                 for path in sorted(directory.rglob("*")):

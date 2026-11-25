@@ -22,9 +22,9 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 LAYERS = ("offline", "java", "fixture", "native")
 DESCRIPTIONS = {
-    "offline": "Python unit/adapter fixtures; no JVM or native host",
+    "offline": "Python development and legacy adapter fixtures; no JVM or native host",
     "java": "Java transport and simulated-host tests; installed API jar required",
-    "fixture": "Real MCP/Python/Java protocol + registry fixture; NOT native editing",
+    "fixture": "Java HTTP MCP protocol and registry fixture; NOT native editing",
     "native": "Opt-in read-only native preflight; NOT music/UI/persistence E2E",
 }
 

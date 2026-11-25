@@ -145,7 +145,7 @@ def test_probe_failure_latches_before_a_caught_failure_can_continue(monkeypatch,
     dispatched = []
 
     @asynccontextmanager
-    async def fake_stdio(_):
+    async def fake_http(_):
         yield None, None
 
     class Session:
@@ -184,7 +184,7 @@ def test_probe_failure_latches_before_a_caught_failure_can_continue(monkeypatch,
         artifacts=tmp_path / "missing" if failure_stage == "persist" else tmp_path,
         guard=target_guard,
     )
-    monkeypatch.setattr(native_smoke, "stdio_client", fake_stdio)
+    monkeypatch.setattr(native_smoke, "streamable_http_client", fake_http)
     monkeypatch.setattr(native_smoke, "ClientSession", Session)
     with pytest.raises((OSError, ValueError)):
         asyncio.run(native_smoke.probe(target, {}))

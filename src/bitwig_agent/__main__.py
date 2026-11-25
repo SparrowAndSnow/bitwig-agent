@@ -1,5 +1,5 @@
-"""Run the stdio MCP server with python -m bitwig_agent."""
-from .server import main
+"""Run the optional extension installer with python -m bitwig_agent."""
+from .install import main
 
 
 if __name__ == "__main__":

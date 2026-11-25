@@ -10,7 +10,7 @@ import java.nio.charset.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-/** Bounded local transport. The handler enqueues host work; this class never calls host APIs. */
+/** Legacy TCP transport retained for the transport regression fixtures. */
 public final class RpcServer implements AutoCloseable {
     public interface Handler {
         CompletableFuture<JsonObject> handle(String method, JsonObject params, long deadlineNanos);

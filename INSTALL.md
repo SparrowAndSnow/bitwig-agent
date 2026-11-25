@@ -1,8 +1,15 @@
 # Installation details
 
-Start with the [three-step quickstart](README.md#quickstart). Choose an isolated [uv tool environment](https://docs.astral.sh/uv/guides/tools/) from [PyPI](https://pypi.org/project/bitwig-agent/), or the [Arch/AUR package](#arch-linux-aur). Both supply the same-version prebuilt controller extension without a Java compiler. Version **`0.2.0` requires Bitwig 6.1.4 and its exact loaded host JAR for private Grid/modulator access**; it replaces `0.1.2`'s 6.1.3 bindings rather than supporting both hosts. It also includes the stop/seek and track-selection fixes. Native evidence is bounded to Linux / API 25; platform-specific installer defaults do not establish macOS or Windows host support.
+## Java HTTP MCP installation
 
-Bitwig documents its platform extension directories and manual controller registration in its [official controller-extension installation guide](https://www.bitwig.com/support/technical_support/how-do-i-add-a-controller-extension-or-script-17/).
+1. Obtain a `BitwigAgent.bwextension` built with HTTP MCP. In this checkout, run `python3 scripts/build.py` with a JDK and the installed Bitwig API JAR. See [source builds](CONTRIBUTING.md).
+2. Copy the file into Bitwig's user Extensions directory. On Linux, the default is `~/Bitwig Studio/Extensions/`. See [Bitwig's extension installation guide](https://www.bitwig.com/support/technical_support/how-do-i-add-a-controller-extension-or-script-17/) for other platforms. The optional installer can copy a local build and back up the previous file via `bitwig-agent-install --extension build/BitwigAgent.bwextension`.
+3. Restart Bitwig if it was already running. Under **Settings → Controllers**, enable **Bitwig Agent → Local API bridge**.
+4. Add `http://127.0.0.1:61172/mcp` as a Streamable HTTP MCP server in your client. If you set `BITWIG_AGENT_PORT` for the Bitwig process, use that port in the URL. Call `status` to check the loaded build.
+
+The extension provides the MCP endpoint. An old `command`/ `args` stdio entry should be replaced with the URL. See [example configuration](examples/mcp-config.json).
+
+**Earlier releases.** The sections below document the original Python stdio and Java TCP release artifacts. The published v0.2.0 asset described there uses the earlier transport.
 
 ## Persistent uv tools and ephemeral uvx
 

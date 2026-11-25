@@ -4,15 +4,9 @@ Install and connect using the [quickstart](README.md#quickstart). This guide des
 
 ## Discover the installed interface
 
-MCP clients should inspect their current server's tool list, then load only the input schema needed for the next call. Reuse schemas already read in the session unless the server/version/tool definitions change; live targets, context tokens and safety state still need fresh observations. CLI users can inspect the same Python catalog without contacting Bitwig:
+Connect the MCP client to `http://127.0.0.1:61172/mcp` and use its tool list for the current input schemas. Call `status`, `capabilities` and `context.get` to establish which build and project are active. Reuse schemas already read in the session unless the server changes.
 
-```sh
-bitwig-agent-rpc list
-bitwig-agent-rpc describe parameters.set
-bitwig-agent-rpc describe grid.parameters.set
-```
-
-Then call `status` (its `extension:{version,build}` identifies the loaded build; the client flags `extensionMismatch`) and `capabilities` against the running extension; use `grid.capabilities` before private Grid work. Invalid-argument errors name the closest valid field. Offline schema discovery does not prove host availability. Use schemas from the installed version and keep its extension matched; do not copy example UUIDs or infer argument names from a different Bitwig integration.
+The current HTTP build exposes public Controller API tools. Grid patch editing, private modulator reads and private Launcher settings described in historical examples below require the earlier builds that exposed them.
 
 For a current-clip MIDI task, use the skill's [fast path](skills/bitwig-agent/SKILL.md#fast-path-edit-the-current-midi-clip) and [interface-specific route](skills/bitwig-agent/references/production-workflows.md#current-midi-clip-interface-route); with this bridge that is `context.get`, then `notes.read` on its `cursorClip`. Prefer an applicable already connected interface over setup or Grid research. Legacy `bitwig-midi` uses one-based track/slot numbers; this bridge uses track UUIDs and zero-based indices. Parallelize only independent side-effect-free reads, serialize writes and selection-changing reads, and inspect outcomes before dependent edits.
 
@@ -37,8 +31,8 @@ The skill supports screenshot-only guidance, delegated production and troublesho
 | Tracks | UUID-targeted mix/name/mute/solo/arm, selection, audio/instrument/effect creation and send readback |
 | Devices and parameters | Bypass, selection, native/plug-in/preset insertion, eight Remote Controls with page/context guards; source-bound normalized direct parameters on roots and fixed layer children |
 | Launcher/MIDI | Empty-slot clip creation (optionally with notes), scene append, local audio/clip-file import, launch/stop, note reads and bounded edits |
-| Grid | Native catalog, bounded graph/metadata/footprint and parameter-context reads; guarded raw scalar and coupled boolean-panel writes; known-catalog insertion, move/delete, raw custom-name CAS and single-input cable CAS |
-| Modulators | Read-only primary inventory on an explicit root device and exact native string-panel reads; no loading, mappings or writes |
+| Grid | Disabled in the current HTTP build. |
+| Modulators | Private read tools are disabled in the current HTTP build. |
 
 The registry's methods are not comprehensively native-accepted tools. Track, root-device and launcher windows are 16 each; sends are eight per track. Layers are one hop: two layers per root and two children per layer. Deeper hierarchy, named slots/drum pads, project paging, arranger clip editing, automation curves and dedicated master/cue tools are outside the structured surface. Bounded reads are not lossless whole-project exports.
 

@@ -24,8 +24,8 @@ import re
 import subprocess
 import sys
 
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
+from mcp import ClientSession
+from mcp.client.streamable_http import streamable_http_client
 
 from bitwig_agent.catalog import TOOLS
 
@@ -193,13 +193,11 @@ class NativeTarget:
 
 
 async def probe(target, report):
-    env = dict(os.environ, BITWIG_AGENT_PORT=str(target.config["port"]))
-    server = StdioServerParameters(command=sys.executable,
-                                  args=["-c", "from bitwig_agent.server import main; main()"], env=env)
+    url = f"http://127.0.0.1:{target.config['port']}/mcp"
     calls_path = target.artifacts / "calls.jsonl"
     raw_results_path = target.artifacts / "mcp-results.jsonl"
     outcome_guard = NativeOutcomeGuard()
-    async with stdio_client(server) as (read, write):
+    async with streamable_http_client(url) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
             advertised = {tool.name for tool in (await session.list_tools()).tools}
@@ -235,7 +233,7 @@ async def probe(target, report):
                 raise RuntimeError("Observed project name differs from explicit fixture; refusing further queries")
             capabilities = await call("capabilities")
             if set(capabilities["methods"]) != advertised:
-                raise RuntimeError("Native Java registry differs from the installed MCP adapter")
+                raise RuntimeError("Native Java registry differs from the MCP tool list")
             report["beforeTransport"] = await call("transport.get")
             tracks = await call("tracks.list")
             report["trackWindow"] = tracks.get("window")

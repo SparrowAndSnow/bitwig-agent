@@ -1,4 +1,4 @@
-# Local bridge protocol v1 (implementation contract)
+# Bitwig Agent MCP protocol
 
 This is the implementation reference, not a tutorial or a host-acceptance report. Use [README](README.md) to start and [VERIFICATION](VERIFICATION.md) for reproducible checks and coverage limits.
 
@@ -13,43 +13,23 @@ This is the implementation reference, not a tutorial or a host-acceptance report
 - [Grid controls](#version-gated-grid-controls)
 - [Architecture and evidence boundary](#architecture-and-evidence-boundary)
 
-The MCP adapter connects to IPv4 loopback `127.0.0.1:61172` by default. Both the extension host process and client may set `BITWIG_AGENT_PORT` to the same alternate port; the extension reads it during initialization, validates ASCII decimal `1..65535`, and still binds only `127.0.0.1`. One UTF-8 JSON request and one JSON response per TCP connection, each terminated by newline. This is internal transport, not an extra agent orchestration protocol. No automatic retries. Requests and responses are limited to 1 MiB.
+The Java extension provides a stateless [Streamable HTTP MCP endpoint](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports) at `http://127.0.0.1:61172/mcp`. The Bitwig process may set a different `BITWIG_AGENT_PORT`. The extension validates the Host and Origin headers and trusts local processes that can connect.
 
-The TCP endpoint is unauthenticated. Any local process able to connect can invoke tools; use only in a trusted local environment and never expose or forward this port to a network. Context tokens and target guards are not authentication.
-
-Request:
+Send MCP `initialize` followed by `notifications/initialized`. Discover tools with `tools/list`. For example, a `tools/call` request body is:
 
 ```json
-{"id":"client-generated-unique-id","method":"status","params":{},"timeoutMs":5000}
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"status","arguments":{"timeoutMs":5000}}}
 ```
 
-`id` is a nonempty string (maximum 128 characters), `method` a known method, `params` an object, `timeoutMs` an integer from 100 through 10000. Missing timeout defaults to 5000. Reject invalid input before scheduling work. The host adapter checks the monotonic deadline immediately before each mutation, including deferred callbacks. A dispatched host action cannot necessarily be cancelled.
+`timeoutMs` is optional and accepts integers from 100 through 10000. The default is 5000. Java checks the monotonic deadline before host work, including deferred callbacks. Request and response bodies are limited to 1 MiB. POST responses use JSON; standalone SSE GET requests return HTTP 405.
 
-Response:
+A tool response carries `{"result":{...}}` on success or `{"error":{"code":"...","message":"...","outcome":"..."}}` for tool execution errors such as invalid arguments or an uncertain write. The envelope appears in `structuredContent` and in serialized text. Tool errors also set `isError`. Malformed MCP calls and unknown tools use JSON-RPC errors. A request ID correlates the reply. Automatic retries are disabled at the host boundary.
 
-```json
-{"id":"client-generated-unique-id","result":{"status":"observed"}}
-```
-
-or
-
-```json
-{"id":"client-generated-unique-id","error":{"code":"deadline_exceeded","message":"Outcome unknown; inspect state before issuing another write.","outcome":"unknown"}}
-```
-
-The client checks response correlation. Errors after dispatch or a lost connection must not become an automatic replay. `id` correlates requests; it is not a persistent deduplication key. A result describes actual observation/verification scope, not universal success.
-
-MCP returns the same envelope as both `structuredContent` and JSON text. Text uses compact separators without dropping values, nulls, error outcomes or verification fields; whitespace is not a protocol contract. The toolkit does not route to the GUI automatically. An agent may explicitly use Computer Use for unsupported operations, but must inspect uncertain writes rather than blindly repeat them through another interface.
-
-Version `0.2.0` uses MCP SDK 2.3+. Expected bridge and argument-validation failures remain error-flagged tool results with the envelopes above. An unexpected uncaught adapter exception instead surfaces as an MCP JSON-RPC error under SDK 2, not a fabricated tool result or `not_dispatched` acknowledgement. Such a protocol error is not permission to retry: the host operation may already have run.
-
-The registry includes `grid.*` and read-only `modulators.*` methods across discovery, flat and one-hop layer direct parameters, Actions, transport, tracks, devices/Remote Controls, launcher, MIDI and version-gated Grid inspection/scalar and boolean-panel writes/module insertion/move/selective delete/raw custom-name CAS/single-input cable editing. Existing request shapes remain unchanged. `capabilities` describes implemented domains and limits, not host acceptance. `bitwig-agent-rpc list` and `describe METHOD` expose the Python registry offline; the Java/MCP fixture checks transported schemas against the host registry. This is not complete Bitwig interface coverage.
-
-Java transport boundary (Gson): `RpcServer.Handler.handle(String method, JsonObject params, long deadlineNanos)` returns `CompletableFuture<JsonObject>` containing the **result** object. Handler must enqueue work for the host and never call host model APIs from the network thread. Transport does not implement retries, host state, selection or business logic. Transport errors are envelopes; host method rejections may complete exceptionally using the shared `RpcException` type carrying `code`, `outcome`, and message.
+`McpHttpServer` handles HTTP and MCP framing. `McpTools` loads the tool schema resource and checks that its names match `HostBridge.supportedMethods()`. `HostBridge` validates arguments and schedules host work. Inspect the live supported method list for this build. The historical private Grid, modulator and Launcher settings contracts below are inactive in the HTTP build.
 
 ## Core discovery and direct parameters
 
-Parameter objects accept exactly the listed keys; extra keys and explicit nulls are rejected. Unless a narrower bound is documented, strings must be nonempty and at most4096 UTF-16 code units. `trackId` is a UUID reported by the current track bank, not a name. Root `deviceIndex` is an integer0–15; general paging is not implemented. The separate one-layer API below does not reinterpret flat device indices. MCP/CLI `timeoutMs` is removed from method params and sent in the transport envelope.
+Parameter objects accept exactly the listed keys; extra keys and explicit nulls are rejected. Unless a narrower bound is documented, strings must be nonempty and at most4096 UTF-16 code units. `trackId` is a UUID reported by the current track bank, not a name. Root `deviceIndex` is an integer0–15; general paging is not implemented. The separate one-layer API below does not reinterpret flat device indices. The MCP handler removes `timeoutMs` before domain validation and uses it to set the deadline.
 
 | Method | Exact params |
 |---|---|
@@ -59,7 +39,7 @@ Parameter objects accept exactly the listed keys; extra keys and explicit nulls 
 | `parameters.list` | `{"trackId":"...","deviceIndex":0,"expectedDeviceName":"..."}` |
 | `parameters.set` | `{"trackId":"...","deviceIndex":0,"expectedDeviceName":"...","contextToken":"...","parameterId":"...","value":0.5}` |
 
-`status` returns `status:"observed"`, `hostVersion`, `apiVersion`, `projectName`, `engineActive`, `playing`, `projectModified` (observed `Project.isModified()`: true unsaved, false saved, null unobserved), the two window capacities, and `parameterBindingDiagnostics`. Diagnostics report the current bank target, match/established state, source-local ID callback counters, cache generation and observed-proxy identity scope; when unbound, only established/identity scope are present. They are not a complete callback event trace. `status` and `capabilities` also return `extension:{version,build}`: package version and git short SHA (`-dirty` if uncommitted changes) embedded by `scripts/build.py`, or `"unknown"`. The Python client adds `extensionMismatch:{extensionVersion,clientVersion,warning}` to a `status` result when the versions differ; the call still succeeds. Status is a snapshot, not a project identity or host-test certificate.
+`status` returns `status:"observed"`, `hostVersion`, `apiVersion`, `projectName`, `engineActive`, `playing`, `projectModified` (observed `Project.isModified()`: true unsaved, false saved, null unobserved), the two window capacities, and `parameterBindingDiagnostics`. Diagnostics report the current bank target, match/established state, source-local ID callback counters, cache generation and observed-proxy identity scope; when unbound, only established/identity scope are present. They are not a complete callback event trace. `status` and `capabilities` also return `extension:{version,build}`: package version and git short SHA (`-dirty` if uncommitted changes) embedded by `scripts/build.py`, or `"unknown"`. Status is a snapshot, not a project identity or host-test certificate.
 
 `tracks.list` returns `tracks:[{trackId,index,name}]`, `scope:"flat_track_bank"`, and `window:{offset,capacity,total,complete}`. `devices.list` returns `trackId`, `devices:[{deviceIndex,name,type}]`, `scope:"top_level"`, and the same window metadata. Both windows have capacity 16. `complete` describes the bank's count/window coverage only, not all project object types. A track or device outside the current window is rejected rather than silently selecting another target.
 

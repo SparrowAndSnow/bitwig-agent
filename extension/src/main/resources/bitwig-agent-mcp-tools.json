@@ -1,0 +1,1926 @@
+[
+  {
+    "name": "status",
+    "description": "Observe project/transport state, not proof of audio or persistence. projectModified: true = unsaved changes, null = unobserved (treat as unsaved).",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        }
+      },
+      "title": "StatusArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "capabilities",
+    "description": "Discover implemented host methods, bounded windows, units and disabled interfaces.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        }
+      },
+      "title": "StatusArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "tracks.list",
+    "description": "Discover real track UUIDs in the flat bounded track window. All our track/device/clip/channel indices are zero-based. Inspect window completeness before choosing targets; example UUIDs are not real targets.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        }
+      },
+      "title": "StatusArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "tracks.get",
+    "description": "Read one track's mix state and bounded sends by UUID from tracks.list. Values explicitly named Normalized are in 0..1, not dB. Fields may be null after target changes; inspect readable, observationsComplete and sendObservationsComplete rather than treating partial observations as current values.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trackId"
+      ],
+      "title": "DeviceArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "tracks.set",
+    "description": "Set only differing fields from a fresh tracks.get snapshot, by UUID; omitted fields stay unchanged. Inspect completion and each fields entry's verification. A redundant same-value write on a rebound proxy may remain unknown without a fresh callback; never automatically retry unknown. Values named Normalized are 0..1, not dB.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "volumeNormalized": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Volumenormalized",
+          "type": "number"
+        },
+        "panNormalized": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Pannormalized",
+          "type": "number"
+        },
+        "mute": {
+          "title": "Mute",
+          "type": "boolean"
+        },
+        "solo": {
+          "title": "Solo",
+          "type": "boolean"
+        },
+        "arm": {
+          "title": "Arm",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "trackId"
+      ],
+      "title": "TrackSetArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "tracks.select",
+    "description": "Select an exact discovered track UUID in the host UI. Returns dispatched/not_observed, not completion; a selected snapshot does not acknowledge navigation. Inspect the actual UI and possible automatic arming before dependent edits; never blindly retry. Reads do not require selection.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trackId"
+      ],
+      "title": "DeviceArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "tracks.create",
+    "description": "Create and name a track. position=-1 appends; otherwise a zero-based main-track index for audio/instrument, effect-list index for effect. Inspect creation identity/verification before using the new track. An unresolved creation quarantines further creates for this extension instance (unresolved_creation); inspect actual state, never blindly retry or reset to bypass ambiguity.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "audio",
+            "instrument",
+            "effect"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "position": {
+          "maximum": 2147483647,
+          "minimum": -1,
+          "title": "Position",
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "position",
+        "name"
+      ],
+      "title": "TrackCreateArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "context.get",
+    "description": "One read-only orientation call (does not select or move the cursor): projectName, playing, tempoBpm, the three recording/automation safety flags, sceneCount, tracks [{trackId, index, name, type, selected, launcherSlots [{slotIndex, name, playing}] occupied slots only}], selectedTrack (trackId) and cursorClip {trackId, slotIndex, name}: the clip the user has selected in the launcher/editor. Unobserved values are null, never guessed; cursorClip is null when no clip is selected or it lies outside the observed 16 tracks/16 scenes. Your own notes.read/notes.edit/launcher.create calls move cursorClip.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        }
+      },
+      "title": "StatusArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "transport.get",
+    "description": "Read observed projectName, playing, tempoBpm, positionBeats, metronome and loop settings. Recording/automation fields are arrangerRecordEnabled, arrangerAutomationWriteEnabled and clipLauncherAutomationWriteEnabled; require each explicitly false before stopped-fixture edits, not missing/null. One response covers project-label and playback-safety preflight; the name is not full-path identity or an atomic lock.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        }
+      },
+      "title": "StatusArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "transport.set",
+    "description": "Change only supplied transport fields; e.g. tempoBpm=120 playing=false. Supported tempo range 20..666 BPM is a toolkit bound. Beat positions are nonnegative; loop duration is positive and loop end finite. An explicit playing=false is observed before other supplied fields are dispatched; this is not an atomic transaction. Inspect per-field verification and stop on unknown completion. Playback can produce audio. Recording or automation-write mode blocks changes except an explicit playing=false stop; modes are never silently disabled.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "playing": {
+          "title": "Playing",
+          "type": "boolean"
+        },
+        "tempoBpm": {
+          "maximum": 666,
+          "minimum": 20,
+          "title": "Tempobpm",
+          "type": "number"
+        },
+        "positionBeats": {
+          "minimum": 0,
+          "title": "Positionbeats",
+          "type": "number"
+        },
+        "metronome": {
+          "title": "Metronome",
+          "type": "boolean"
+        },
+        "loopEnabled": {
+          "title": "Loopenabled",
+          "type": "boolean"
+        },
+        "loopStartBeats": {
+          "minimum": 0,
+          "title": "Loopstartbeats",
+          "type": "number"
+        },
+        "loopDurationBeats": {
+          "exclusiveMinimum": 0,
+          "title": "Loopdurationbeats",
+          "type": "number"
+        }
+      },
+      "title": "TransportSetArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "devices.list",
+    "description": "Read source-bound top-level device observations without changing host cursor/selection. Discover zero-based deviceIndex and exact expectedDeviceName, within the returned window.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trackId"
+      ],
+      "title": "DeviceArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "devices.get",
+    "description": "Read a source-bound device's state and unsupported-interface details without selecting it. Use exact name and zero-based index from devices.list.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        },
+        "deviceIndex": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Deviceindex",
+          "type": "integer"
+        },
+        "expectedDeviceName": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Expecteddevicename",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trackId",
+        "deviceIndex",
+        "expectedDeviceName"
+      ],
+      "title": "ParameterArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "devices.layers.list",
+    "description": "Discover one layer level beneath an explicit root parent without selection. Fixed zero-offset windows cover at most 2 layers and 2 child devices per layer, not a complete hierarchy. Inspect observed counts, completeness and readiness before using layerId, childDeviceIndex, exact expectedChildDeviceName and discoveryToken. Pads, slots and deeper targets are unsupported.",
+    "inputSchema": {
+      "$defs": {
+        "DeviceParent": {
+          "additionalProperties": false,
+          "properties": {
+            "trackId": {
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+              "title": "Trackid",
+              "type": "string"
+            },
+            "deviceIndex": {
+              "maximum": 15,
+              "minimum": 0,
+              "title": "Deviceindex",
+              "type": "integer"
+            },
+            "expectedDeviceName": {
+              "maxLength": 4096,
+              "minLength": 1,
+              "title": "Expecteddevicename",
+              "type": "string"
+            }
+          },
+          "required": [
+            "trackId",
+            "deviceIndex",
+            "expectedDeviceName"
+          ],
+          "title": "DeviceParent",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "parent": {
+          "$ref": "#/$defs/DeviceParent"
+        }
+      },
+      "required": [
+        "parent"
+      ],
+      "title": "LayerListArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "devices.set",
+    "description": "Enable or bypass an explicitly identified device using enabled=true/false. Inspect fresh observation or unknown outcome before another write.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        },
+        "deviceIndex": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Deviceindex",
+          "type": "integer"
+        },
+        "expectedDeviceName": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Expecteddevicename",
+          "type": "string"
+        },
+        "enabled": {
+          "title": "Enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "trackId",
+        "deviceIndex",
+        "expectedDeviceName",
+        "enabled"
+      ],
+      "title": "DeviceSetArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "devices.select",
+    "description": "Explicitly select this device in the host UI. Unlike source-bound reads, this intentionally changes selection.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        },
+        "deviceIndex": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Deviceindex",
+          "type": "integer"
+        },
+        "expectedDeviceName": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Expecteddevicename",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trackId",
+        "deviceIndex",
+        "expectedDeviceName"
+      ],
+      "title": "ParameterArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "devices.catalog",
+    "description": "Discover installed Poly/FX/Note Grid factory device files using the host's installationRoot. Copy kind=file and path into devices.insert with an observed track/count. Only existing files are listed; no guessed community UUIDs or exhaustive plug-in inventory. File presence is not insertion or musical verification.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        }
+      },
+      "title": "StatusArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "devices.insert",
+    "description": "Append a native device, plug-in or preset to the track's end chain. Discover expectedDeviceCount with devices.list; truncated windows are rejected. kind=bitwig requires canonical UUID id; vst2 signed int32 decimal id; vst3 32 hex id; clap printable ASCII id. kind=file requires absolute normalized path instead of id. No shell/path expansion. An observed added device does not prove its requested native UUID: inspect requestedIdentifierVerified. Insertion can load plug-ins or produce audio; observe before retrying.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        },
+        "expectedDeviceCount": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Expecteddevicecount",
+          "type": "integer"
+        },
+        "kind": {
+          "enum": [
+            "bitwig",
+            "vst2",
+            "vst3",
+            "clap",
+            "file"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "path": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trackId",
+        "expectedDeviceCount",
+        "kind"
+      ],
+      "title": "DeviceInsertArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "devices.remote.get",
+    "description": "Read a source-device-bound remote-control page and fresh contextToken without changing the GUI page. Discover exact page/control names and zero-based indices. Token tracks observed metadata, not unobservable same-name remaps.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        },
+        "deviceIndex": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Deviceindex",
+          "type": "integer"
+        },
+        "expectedDeviceName": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Expecteddevicename",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trackId",
+        "deviceIndex",
+        "expectedDeviceName"
+      ],
+      "title": "ParameterArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "devices.remote.page",
+    "description": "Change this extension's independent remote page, not the GUI-selected page. Use current contextToken and target pageIndex/expectedPageName from devices.remote.get; get a fresh token after switching.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        },
+        "deviceIndex": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Deviceindex",
+          "type": "integer"
+        },
+        "expectedDeviceName": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Expecteddevicename",
+          "type": "string"
+        },
+        "contextToken": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Contexttoken",
+          "type": "string"
+        },
+        "pageIndex": {
+          "maximum": 4095,
+          "minimum": 0,
+          "title": "Pageindex",
+          "type": "integer"
+        },
+        "expectedPageName": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Expectedpagename",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trackId",
+        "deviceIndex",
+        "expectedDeviceName",
+        "contextToken",
+        "pageIndex",
+        "expectedPageName"
+      ],
+      "title": "RemotePageArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "devices.remote.set",
+    "description": "Set one normalized remote control with exact page/control names and fresh contextToken from devices.remote.get. Indices are zero-based; inspect fresh same-source value verification. Unobservable same-name mapping changes are not guaranteed detectable.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        },
+        "deviceIndex": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Deviceindex",
+          "type": "integer"
+        },
+        "expectedDeviceName": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Expecteddevicename",
+          "type": "string"
+        },
+        "contextToken": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Contexttoken",
+          "type": "string"
+        },
+        "expectedPageName": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Expectedpagename",
+          "type": "string"
+        },
+        "parameterIndex": {
+          "maximum": 7,
+          "minimum": 0,
+          "title": "Parameterindex",
+          "type": "integer"
+        },
+        "expectedParameterName": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Expectedparametername",
+          "type": "string"
+        },
+        "normalizedValue": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Normalizedvalue",
+          "type": "number"
+        }
+      },
+      "required": [
+        "trackId",
+        "deviceIndex",
+        "expectedDeviceName",
+        "contextToken",
+        "expectedPageName",
+        "parameterIndex",
+        "expectedParameterName",
+        "normalizedValue"
+      ],
+      "title": "RemoteSetArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "parameters.list",
+    "description": "Read source-bound direct parameters and contextToken without changing host cursor/selection. Preserve trackId, deviceIndex, exact expectedDeviceName and fresh token for parameters.set. Bank context is not persistent physical-device identity.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        },
+        "deviceIndex": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Deviceindex",
+          "type": "integer"
+        },
+        "expectedDeviceName": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Expecteddevicename",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trackId",
+        "deviceIndex",
+        "expectedDeviceName"
+      ],
+      "title": "ParameterArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "parameters.set",
+    "description": "Set one normalized direct parameter using the exact target, parameterId and contextToken from parameters.list. Example: value=0.5. Inspect scope and verification. Never retry an unknown outcome without inspecting state.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        },
+        "deviceIndex": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Deviceindex",
+          "type": "integer"
+        },
+        "expectedDeviceName": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Expecteddevicename",
+          "type": "string"
+        },
+        "contextToken": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Contexttoken",
+          "type": "string"
+        },
+        "parameterId": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Parameterid",
+          "type": "string"
+        },
+        "value": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "trackId",
+        "deviceIndex",
+        "expectedDeviceName",
+        "contextToken",
+        "parameterId",
+        "value"
+      ],
+      "title": "SetArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "parameters.layer.list",
+    "description": "Read one discovered layer child's direct parameters and contextToken without selection. Supply the explicit parent and fresh discoveryToken from devices.layers.list. Structural ancestor changes invalidate tokens; names are metadata checks, not persistent identity. Physically rebound child sources fail closed without a genuine provenance boundary. No nested remotes, deeper layers, pads, slots or Grid-private targeting.",
+    "inputSchema": {
+      "$defs": {
+        "DeviceParent": {
+          "additionalProperties": false,
+          "properties": {
+            "trackId": {
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+              "title": "Trackid",
+              "type": "string"
+            },
+            "deviceIndex": {
+              "maximum": 15,
+              "minimum": 0,
+              "title": "Deviceindex",
+              "type": "integer"
+            },
+            "expectedDeviceName": {
+              "maxLength": 4096,
+              "minLength": 1,
+              "title": "Expecteddevicename",
+              "type": "string"
+            }
+          },
+          "required": [
+            "trackId",
+            "deviceIndex",
+            "expectedDeviceName"
+          ],
+          "title": "DeviceParent",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "parent": {
+          "$ref": "#/$defs/DeviceParent"
+        },
+        "layerId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Layerid",
+          "type": "string"
+        },
+        "childDeviceIndex": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Childdeviceindex",
+          "type": "integer"
+        },
+        "expectedChildDeviceName": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Expectedchilddevicename",
+          "type": "string"
+        },
+        "discoveryToken": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Discoverytoken",
+          "type": "string"
+        }
+      },
+      "required": [
+        "parent",
+        "layerId",
+        "childDeviceIndex",
+        "expectedChildDeviceName",
+        "discoveryToken"
+      ],
+      "title": "LayerParameterArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "parameters.layer.set",
+    "description": "Set one normalized layer-child direct parameter in 0..1 using the exact discovered target, discoveryToken and fresh contextToken/parameterId from parameters.layer.list. Inspect readiness, scope and observed verification; never retry an unknown outcome without inspecting state. No selection or GUI fallback.",
+    "inputSchema": {
+      "$defs": {
+        "DeviceParent": {
+          "additionalProperties": false,
+          "properties": {
+            "trackId": {
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+              "title": "Trackid",
+              "type": "string"
+            },
+            "deviceIndex": {
+              "maximum": 15,
+              "minimum": 0,
+              "title": "Deviceindex",
+              "type": "integer"
+            },
+            "expectedDeviceName": {
+              "maxLength": 4096,
+              "minLength": 1,
+              "title": "Expecteddevicename",
+              "type": "string"
+            }
+          },
+          "required": [
+            "trackId",
+            "deviceIndex",
+            "expectedDeviceName"
+          ],
+          "title": "DeviceParent",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "parent": {
+          "$ref": "#/$defs/DeviceParent"
+        },
+        "layerId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Layerid",
+          "type": "string"
+        },
+        "childDeviceIndex": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Childdeviceindex",
+          "type": "integer"
+        },
+        "expectedChildDeviceName": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Expectedchilddevicename",
+          "type": "string"
+        },
+        "discoveryToken": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Discoverytoken",
+          "type": "string"
+        },
+        "contextToken": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Contexttoken",
+          "type": "string"
+        },
+        "parameterId": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Parameterid",
+          "type": "string"
+        },
+        "value": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "parent",
+        "layerId",
+        "childDeviceIndex",
+        "expectedChildDeviceName",
+        "discoveryToken",
+        "contextToken",
+        "parameterId",
+        "value"
+      ],
+      "title": "LayerSetArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "launcher.list",
+    "description": "Discover occupied and empty launcher clip slots for one track UUID; slotIndex is zero-based within the bounded window; slots exist only up to the scene count (window.total). selected=true marks the slot of the UI cursor clip (null if not yet observed); notes.* calls move that selection.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trackId"
+      ],
+      "title": "DeviceArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "launcher.create",
+    "description": "Create a named MIDI clip only in an empty zero-based slot that exists (slotIndex < scene count; else slot_out_of_range: run scenes.append, then launcher.list), with loop length and playback stop set to lengthBeats. Selects that clip in the host UI to bind and verify the explicit target. Example: trackId=<UUID> slotIndex=0 lengthBeats=4 name=Sketch. Optional notes (op=set entries: beat, pitch, velocity, durationBeats; optional channel, default 0) are written in the same call after the clip is observed, with notes.edit's compact verification under noteWrite (detail=full for the full shape); notes must fit lengthBeats; an unobserved create writes none; never retried. Never overwrites an existing clip.",
+    "inputSchema": {
+      "$defs": {
+        "ClipNote": {
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "set",
+              "title": "Op",
+              "type": "string"
+            },
+            "beat": {
+              "maximum": 4194304,
+              "minimum": 0,
+              "title": "Beat",
+              "type": "number"
+            },
+            "pitch": {
+              "maximum": 127,
+              "minimum": 0,
+              "title": "Pitch",
+              "type": "integer"
+            },
+            "velocity": {
+              "maximum": 127,
+              "minimum": 1,
+              "title": "Velocity",
+              "type": "integer"
+            },
+            "durationBeats": {
+              "maximum": 4096,
+              "minimum": 0.0078125,
+              "title": "Durationbeats",
+              "type": "number"
+            }
+          },
+          "required": [
+            "beat",
+            "pitch",
+            "velocity",
+            "durationBeats"
+          ],
+          "title": "ClipNote",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        },
+        "slotIndex": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Slotindex",
+          "type": "integer"
+        },
+        "lengthBeats": {
+          "maximum": 4096,
+          "minimum": 1,
+          "title": "Lengthbeats",
+          "type": "integer"
+        },
+        "name": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "notes": {
+          "items": {
+            "$ref": "#/$defs/ClipNote"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "title": "Notes",
+          "type": "array"
+        },
+        "channel": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Channel",
+          "type": "integer"
+        },
+        "detail": {
+          "enum": [
+            "compact",
+            "full"
+          ],
+          "title": "Detail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trackId",
+        "slotIndex",
+        "lengthBeats",
+        "name"
+      ],
+      "title": "ClipCreateArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "scenes.append",
+    "description": "Append empty scene(s) at the END of the scene list (count 1..16, default 1; total stays <=16), so existing clip slots never move (unlike actions.invoke \"Create Scene\", which inserts after the selection). Returns observed scene count and firstNewSlotIndex; placement is per API documentation, only the count is read back. Unobserved count is outcome unknown: inspect launcher.list, never blindly repeat. Observed on 6.1.4: appending can move the UI clip/scene selection, so re-read context.get afterwards.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "count": {
+          "maximum": 16,
+          "minimum": 1,
+          "title": "Count",
+          "type": "integer"
+        }
+      },
+      "title": "ScenesAppendArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "launcher.import",
+    "description": "Import a local audio or clip file into an EMPTY explicit launcher slot by track UUID and zero-based slotIndex (0..15, must be below the scene count). Occupied slots reject; no overwrite option. path must be absolute and normalized, without URI, shell/path expansion or control characters. The host checks file existence/readability; .mid/.midi files must parse and contain a positive-velocity note-on or another channel event (use launcher.create for silence). The client checks path syntax only. Result reports only observed slot content transition, not file identity or decoded audio verification. Never blindly retry an unknown outcome.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        },
+        "slotIndex": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Slotindex",
+          "type": "integer"
+        },
+        "path": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trackId",
+        "slotIndex",
+        "path"
+      ],
+      "title": "ClipImportArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "clips.edit",
+    "description": "Whole-clip edit of ONE existing launcher clip per call: trackId, slotIndex, expectedClipName (exact current name from launcher.list/context.get; mismatch is stale_target/not_applied before anything is dispatched) and op. Ops: rename{name}; resize{lengthBeats 1..4096: loop length and play stop}; color{rgb #RRGGBB; Bitwig may snap it to its palette, reported as dispatched/readback_mismatch}; transpose{semitones -48..48, nonzero; no observed channel-0 loop note may leave MIDI 0..127; notes on other channels or outside the loop are moved but not checked}; quantize{amount >0..1: morphs note starts between original (0) and the host's own quantize grid (1), a Bitwig setting not settable here}; duplicateContent (doubles the loop); delete (stopped transport, recording/automation-write off, clip idle); copyTo{targetSlotIndex: an existing, observed-empty slot on the same track, else slot_occupied/slot_out_of_range; nameChanged is reported if the host renames the copy}. Except delete and copyTo, it selects the clip in the host UI (moves the cursor clip, see context.get). Each result says what was read back: rename name, resize loop+play stop, color, delete slot empty, copyTo target content+name, transpose channel-0 onset cells shifted with velocity/duration kept, quantize onset count/pitches/loop length unchanged with at least one cell moved (sub-cell positions are not observable), duplicateContent loop doubled and first half unchanged. transpose and quantize read the whole loop in one 1/32-1/16 window, so need a loop <=32 beats with channel-0 notes (else unverifiable_clip/no_notes, nothing changed); duplicateContent has neither check. Other channels are not compared. rename/resize/color are idempotent: an unread value gives status=dispatched/readback_mismatch. quantize amount 1 with no visible cell movement is status=dispatched/no_cell_change (idempotent, no quarantine). delete, copyTo, transpose, quantize below amount 1 and duplicateContent are never retried: an unobserved outcome is unknown and quarantines that slot until extension.restart. Example: op=transpose semitones=-2.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        },
+        "slotIndex": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Slotindex",
+          "type": "integer"
+        },
+        "expectedClipName": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Expectedclipname",
+          "type": "string"
+        },
+        "op": {
+          "enum": [
+            "rename",
+            "resize",
+            "color",
+            "transpose",
+            "quantize",
+            "duplicateContent",
+            "delete",
+            "copyTo"
+          ],
+          "title": "Op",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "lengthBeats": {
+          "maximum": 4096,
+          "minimum": 1,
+          "title": "Lengthbeats",
+          "type": "integer"
+        },
+        "rgb": {
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "title": "Rgb",
+          "type": "string"
+        },
+        "semitones": {
+          "maximum": 48,
+          "minimum": -48,
+          "title": "Semitones",
+          "type": "integer"
+        },
+        "amount": {
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Amount",
+          "type": "number"
+        },
+        "targetSlotIndex": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Targetslotindex",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "trackId",
+        "slotIndex",
+        "expectedClipName",
+        "op"
+      ],
+      "title": "ClipEditArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "launcher.launch",
+    "description": "Launch an existing clip by explicit track UUID and zero-based slot. Can start playback and produce audio. Recording and both automation-write flags must be observed false; modes are never silently disabled. Dispatch does not prove musical/audio completion. Queued playback returns completion=not_observed; observe launcher.list before dependent edits. Missing queue/playback observation returns completion=unknown: stop the writer, never blindly retry.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        },
+        "slotIndex": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Slotindex",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "trackId",
+        "slotIndex"
+      ],
+      "title": "ClipArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "launcher.stop",
+    "description": "Stop launcher playback on one track UUID; does not delete clips or stop the entire transport. A queued stop returns completion=not_observed; observe launcher.list before dependent edits. Missing queue/stop observation returns completion=unknown: stop the writer, never blindly retry.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trackId"
+      ],
+      "title": "DeviceArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "notes.read",
+    "description": "Read a clip/channel/grid/pitch window. Selects the target clip in the host UI (moves the editor cursor; see context.get). channel is zero-based MIDI 0..15; beat 0 is clip start. stepSizeBeats=0.25,startStep=0,steps=16 covers four beats. Omit all five grid fields (channel defaults to 0) to read the whole clip loop over all pitches at 1/32 (loop <=16 beats) or 1/16 note, 128 steps max; if the loop is longer, windowCoversLoop=false and continuation gives the next explicit window. Rows are {beat, pitch, velocity 1..127, durationBeats}: the unit notes.edit takes; channel is the window's. At most 2048 onsets returned: inspect completeWindow, notesInWindow, notesReturned, continuingAtWindowStart (notes sustaining into the window start) and subdivide steps or pitchCount when incomplete. Grid data is only scheduled-settled (gridReadiness), not a host-data barrier; late callbacks lack window identity. One onset per grid cell: sub-step and multiple onsets per cell are not exposed; the read never covers the whole clip (use the loop window).",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        },
+        "slotIndex": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Slotindex",
+          "type": "integer"
+        },
+        "channel": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Channel",
+          "type": "integer"
+        },
+        "stepSizeBeats": {
+          "maximum": 4,
+          "minimum": 0.0078125,
+          "title": "Stepsizebeats",
+          "type": "number"
+        },
+        "startStep": {
+          "maximum": 1048576,
+          "minimum": 0,
+          "title": "Startstep",
+          "type": "integer"
+        },
+        "steps": {
+          "maximum": 128,
+          "minimum": 1,
+          "title": "Steps",
+          "type": "integer"
+        },
+        "pitchStart": {
+          "maximum": 127,
+          "minimum": 0,
+          "title": "Pitchstart",
+          "type": "integer"
+        },
+        "pitchCount": {
+          "maximum": 128,
+          "minimum": 1,
+          "title": "Pitchcount",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "trackId",
+        "slotIndex"
+      ],
+      "title": "NoteWindowArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "notes.edit",
+    "description": "Edit up to 256 onset cells. Selects the target clip in the host UI (moves the editor cursor; see context.get). The window (stepSizeBeats,startStep,steps,pitchStart,pitchCount; all five or none) may be omitted: the finest power-of-two grid (down to 1/128 beat) that aligns every beat/duration within 128 steps, and the pitch range, are derived (window echoed with derived=true); >128 steps is rejected, so split by time or use a coarser grid. channel defaults to 0. Each set requires op=set, absolute beat, MIDI pitch, integer velocity 1..127 and durationBeats; clear requires only op=clear,beat,pitch. Beat/duration must align exactly to stepSizeBeats without rounding; entire note must fit requested window and observed clip loop. No duplicate cells, overlapping same-pitch sets or clear-all; sustains are protected and already-matching cells are not rewritten. Example edits=[{\"op\":\"set\",\"beat\":0,\"pitch\":60,\"velocity\":90,\"durationBeats\":1}]. Result is compact: status/verification cover every edit; summary {requested, dispatched, alreadyMatched, verified, unverified}; unverifiedEdits lists only unverified edits with the observed cell. detail=full also returns the window's note listing (as notes.read) and every edit. Verification is per-cell readback after scheduled grid settling (gridReadiness), not a host-data barrier. Verify unverified edits with notes.read. No automatic retry.",
+    "inputSchema": {
+      "$defs": {
+        "NoteEdit": {
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "enum": [
+                "set",
+                "clear"
+              ],
+              "title": "Op",
+              "type": "string"
+            },
+            "beat": {
+              "maximum": 4194304,
+              "minimum": 0,
+              "title": "Beat",
+              "type": "number"
+            },
+            "pitch": {
+              "maximum": 127,
+              "minimum": 0,
+              "title": "Pitch",
+              "type": "integer"
+            },
+            "velocity": {
+              "maximum": 127,
+              "minimum": 1,
+              "title": "Velocity",
+              "type": "integer"
+            },
+            "durationBeats": {
+              "maximum": 4096,
+              "minimum": 0.0078125,
+              "title": "Durationbeats",
+              "type": "number"
+            }
+          },
+          "required": [
+            "op",
+            "beat",
+            "pitch"
+          ],
+          "title": "NoteEdit",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "trackId": {
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          "title": "Trackid",
+          "type": "string"
+        },
+        "slotIndex": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Slotindex",
+          "type": "integer"
+        },
+        "channel": {
+          "maximum": 15,
+          "minimum": 0,
+          "title": "Channel",
+          "type": "integer"
+        },
+        "stepSizeBeats": {
+          "maximum": 4,
+          "minimum": 0.0078125,
+          "title": "Stepsizebeats",
+          "type": "number"
+        },
+        "startStep": {
+          "maximum": 1048576,
+          "minimum": 0,
+          "title": "Startstep",
+          "type": "integer"
+        },
+        "steps": {
+          "maximum": 128,
+          "minimum": 1,
+          "title": "Steps",
+          "type": "integer"
+        },
+        "pitchStart": {
+          "maximum": 127,
+          "minimum": 0,
+          "title": "Pitchstart",
+          "type": "integer"
+        },
+        "pitchCount": {
+          "maximum": 128,
+          "minimum": 1,
+          "title": "Pitchcount",
+          "type": "integer"
+        },
+        "edits": {
+          "items": {
+            "$ref": "#/$defs/NoteEdit"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "title": "Edits",
+          "type": "array"
+        },
+        "detail": {
+          "enum": [
+            "compact",
+            "full"
+          ],
+          "title": "Detail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trackId",
+        "slotIndex",
+        "edits"
+      ],
+      "title": "NoteEditArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "extension.restart",
+    "description": "Restart this controller extension instance, clearing per-instance write quarantine (replaces the Settings off/on toggle; the process-wide Grid topology quarantine is NOT cleared). Refused with unresolved_mutation while unresolved create/import/note mutations exist, unless discardUnresolved=true; the refusal and the dispatched result both list their descriptions: inspect those targets afterwards, never assume they applied or failed. Returns dispatched only: the MCP endpoint may briefly become unavailable, so poll status until it answers, then re-discover targets (tracks.list etc.). Observed on 6.1.4: it does NOT load a replaced .bwextension (status.extension.build stays the same); restart Bitwig to run a new build, but first save every open project tab (projectModified covers only the current tab; use project.save) or get user consent: closing Bitwig loses unsaved work.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "discardUnresolved": {
+          "title": "Discardunresolved",
+          "type": "boolean"
+        }
+      },
+      "title": "ExtensionRestartArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "actions.list",
+    "description": "List native host Action IDs, names and categories (catalog is >1000 rows: filter with query/category; default limit 100, check total/complete). Availability does not prove completion in the current UI context.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "query": {
+          "description": "Case-insensitive substring of actionId or name.",
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Query",
+          "type": "string"
+        },
+        "category": {
+          "description": "Exact category id or name, case-insensitive.",
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Category",
+          "type": "string"
+        },
+        "limit": {
+          "default": 100,
+          "maximum": 1000,
+          "minimum": 1,
+          "title": "Limit",
+          "type": "integer"
+        }
+      },
+      "title": "ActionListArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "project.save",
+    "description": "Save the project via the native Save action; saved=true only when Project.isModified is observed false (alreadySaved if nothing to save). Otherwise dispatched/not_observed, never re-invoked: an untitled project opens a Save As dialog needing GUI/user completion. Check projectModified before retrying.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        }
+      },
+      "title": "StatusArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "actions.invoke",
+    "description": "Invoke one exact ID from actions.list in the current host/UI context. May edit the project or open a dialog. Quit closes every open tab and only the current tab is observable, so it always needs discardUnsavedChanges=true; Close needs the current tab observed saved (projectModified=false) or discardUnsavedChanges=true. Consent comes from the user only. New/Open open another tab and are not guarded. Returns dispatched only, never completion; inspect state before another write and do not blindly retry.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": {
+          "default": 5000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Timeoutms",
+          "type": "integer"
+        },
+        "actionId": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Actionid",
+          "type": "string"
+        },
+        "discardUnsavedChanges": {
+          "description": "Only with explicit user consent: allow Quit/Close/New/Open when the project is not observed saved.",
+          "title": "Discardunsavedchanges",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "actionId"
+      ],
+      "title": "ActionArgs",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  }
+]

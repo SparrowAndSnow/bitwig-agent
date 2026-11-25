@@ -8,7 +8,7 @@ import java.util.function.BiConsumer;
 import static dev.bitwigagent.HostServices.failure;
 
 /** Composition and the single network-to-host boundary; domain state belongs to modules. */
-public final class HostBridge implements RpcServer.Handler, AutoCloseable {
+public final class HostBridge implements AutoCloseable {
     private static final Map<String, BiConsumer<String, JsonObject>> VALIDATORS = validators();
     private final HostServices services;
     private final Map<String, HostModule> modules = new HashMap<>();
@@ -28,10 +28,7 @@ public final class HostBridge implements RpcServer.Handler, AutoCloseable {
         register(new DeviceModule(services));
         LauncherModule launcher = new LauncherModule(services);
         register(launcher);
-        register(new LauncherSettingsModule(services, launcher));
         register(new ContextModule(services, transport, mix, launcher));
-        register(new GridModule(services));
-        register(new ModulatorModule(services));
         register(new ExtensionModule(services, () -> domains));
         if (!modules.keySet().equals(VALIDATORS.keySet()))
             throw new IllegalStateException("Module dispatch and validation registries differ");
@@ -55,9 +52,6 @@ public final class HostBridge implements RpcServer.Handler, AutoCloseable {
         registerValidator(methods, MixModule.METHODS, MixModule::validateParams);
         registerValidator(methods, DeviceModule.METHODS, DeviceModule::validateParams);
         registerValidator(methods, LauncherModule.METHODS, LauncherModule::validateParams);
-        registerValidator(methods, LauncherSettingsModule.METHODS, LauncherSettingsModule::validateParams);
-        registerValidator(methods, GridModule.METHODS, GridModule::validateParams);
-        registerValidator(methods, ModulatorModule.METHODS, ModulatorModule::validateParams);
         registerValidator(methods, ContextModule.METHODS, ContextModule::validateParams);
         registerValidator(methods, ExtensionModule.METHODS, ExtensionModule::validateParams);
         return Collections.unmodifiableMap(methods);
@@ -80,7 +74,7 @@ public final class HostBridge implements RpcServer.Handler, AutoCloseable {
         validator.accept(method, params);
     }
 
-    @Override public CompletableFuture<JsonObject> handle(String method, JsonObject params, long deadlineNanos) {
+    public CompletableFuture<JsonObject> handle(String method, JsonObject params, long deadlineNanos) {
         HostOperation operation = new HostOperation(deadlineNanos);
         try {
             validate(method, params);

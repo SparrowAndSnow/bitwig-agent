@@ -45,13 +45,11 @@ wheels = [
 name = "bitwig-agent"
 version = "0.2.0"
 source = { editable = "." }
-dependencies = [
-    { name = "mcp" },
-    { name = "pydantic" },
-]
 
 [package.dev-dependencies]
 dev = [
+    { name = "mcp" },
+    { name = "pydantic" },
     { name = "pytest" },
 ]
 native-music = [
@@ -63,13 +61,13 @@ native-music = [
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "mcp", specifier = ">=2.3.0,<3" },
-    { name = "pydantic", specifier = ">=2.12,<3" },
-]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8.3,<9" }]
+dev = [
+    { name = "mcp", specifier = ">=2.3.0,<3" },
+    { name = "pydantic", specifier = ">=2.12,<3" },
+    { name = "pytest", specifier = ">=8.3,<9" },
+]
 native-music = [
     { name = "numpy", specifier = ">=2,<3" },
     { name = "scipy", specifier = ">=1.15,<2" },

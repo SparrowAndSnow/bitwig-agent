@@ -7,7 +7,7 @@ import java.io.IOException;
 public final class BitwigAgentExtension extends ControllerExtension {
     private final ControllerHost host;
     private HostBridge bridge;
-    private RpcServer server;
+    private McpHttpServer server;
 
     BitwigAgentExtension(BitwigAgentExtensionDefinition definition, ControllerHost host) {
         super(definition, host);
@@ -17,13 +17,13 @@ public final class BitwigAgentExtension extends ControllerExtension {
     @Override public void init() {
         int port = configuredPort(System.getenv("BITWIG_AGENT_PORT"));
         bridge = new HostBridge(host);
-        server = new RpcServer(port, bridge);
         try {
+            server = new McpHttpServer(port, bridge::handle);
             server.start();
-            host.println("Bitwig Agent listening on 127.0.0.1:" + port);
-        } catch (IOException error) {
-            bridge.close();
-            throw new IllegalStateException("Cannot start Bitwig Agent loopback server", error);
+            host.println("Bitwig Agent MCP listening at http://127.0.0.1:" + port + "/mcp");
+        } catch (IOException | RuntimeException error) {
+            exit();
+            throw new IllegalStateException("Cannot start Bitwig Agent MCP server", error);
         }
     }
 
@@ -40,6 +40,8 @@ public final class BitwigAgentExtension extends ControllerExtension {
     @Override public void exit() {
         if (bridge != null) bridge.close();
         if (server != null) server.close();
+        server = null;
+        bridge = null;
     }
 
     @Override public void flush() { if (bridge != null) bridge.flush(); }

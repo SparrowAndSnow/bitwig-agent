@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Real MCP stdio/client/Java transport + registry validation, with a fixture handler.
+"""Java HTTP MCP transport and registry validation with a fixture handler.
 
 Requires BITWIG_API_JAR and a JDK. This exercises no Bitwig instance and cannot
 prove edits, observer delivery, audio, UI, or persistence. Run with check.py.
@@ -13,8 +13,8 @@ import subprocess
 import sys
 import tempfile
 
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
+from mcp import ClientSession
+from mcp.client.streamable_http import streamable_http_client
 
 from bitwig_agent.catalog import TOOLS
 
@@ -31,8 +31,14 @@ import com.google.gson.*;
 import java.util.concurrent.CompletableFuture;
 public class McpTransportFixture {
   public static void main(String[] args) throws Exception {
-    try (RpcServer server = new RpcServer(0, (method, params, deadline) -> {
-      HostBridge.validate(method, params);
+    try (McpHttpServer server = new McpHttpServer(0, (method, params, deadline) -> {
+      try {
+        HostBridge.validate(method, params);
+      } catch (RpcException error) {
+        CompletableFuture<JsonObject> failed = new CompletableFuture<>();
+        failed.completeExceptionally(error);
+        return failed;
+      }
       if (method.equals("parameters.set")) {
         CompletableFuture<JsonObject> failed = new CompletableFuture<>();
         failed.completeExceptionally(new RpcException("fixture_unknown", "Observed ambiguity", "unknown"));
@@ -47,7 +53,7 @@ public class McpTransportFixture {
       return CompletableFuture.completedFuture(result);
     })) {
       server.start();
-      System.out.println(server.getPort());
+      System.out.println(server.port());
       System.out.flush();
       System.in.read();
     }
@@ -68,19 +74,17 @@ def require(condition, message):
 async def exercise(folder: Path, api: Path) -> None:
     fixture = folder / "McpTransportFixture.java"
     fixture.write_text(FIXTURE, encoding="utf-8")
-    gson = build.gson_jar()
-    sources = sorted((ROOT / "extension/src/main/java").rglob("*.java"))
-    build.compile_java([*sources, fixture], folder, [gson, api])
+    extension = build.BUILD / "BitwigAgent.bwextension"
+    if not extension.is_file():
+        raise RuntimeError("Build the extension with scripts/build.py before running this fixture")
+    build.compile_java([fixture], folder, [extension, api])
     process = await asyncio.create_subprocess_exec(
-        os.environ.get("JAVA", "java"), "-cp", os.pathsep.join(map(str, [folder, gson, api])),
+        os.environ.get("JAVA", "java"), "-cp", os.pathsep.join(map(str, [folder, extension, api])),
         "dev.bitwigagent.McpTransportFixture", stdin=subprocess.PIPE, stdout=subprocess.PIPE,
     )
     try:
         port = int((await asyncio.wait_for(process.stdout.readline(), 10)).decode())
-        env = dict(os.environ, BITWIG_AGENT_PORT=str(port))
-        server = StdioServerParameters(command=sys.executable,
-                                      args=["-c", "from bitwig_agent.server import main; main()"], env=env)
-        async with stdio_client(server) as (read, write):
+        async with streamable_http_client(f"http://127.0.0.1:{port}/mcp") as (read, write):
             async with ClientSession(read, write) as session:
                 await session.initialize()
                 names = {tool.name for tool in (await session.list_tools()).tools}
@@ -117,7 +121,7 @@ async def exercise(folder: Path, api: Path) -> None:
                 # Exercise the actual MCP validation boundary, not model validation alone.
                 invalid = await session.call_tool("status", {"unexpected": True})
                 require(invalid.is_error, "MCP accepted an extra argument")
-                vectors = await bound_parity.run(port)
+                vectors = await bound_parity.run(session)
         print(f"PASS: {len(names)} matching Java/MCP tools, {calls} example roundtrips, "
               f"Unicode, strict MCP arguments, unknown error propagation, {vectors} bound/optional parity vectors. "
               "FIXTURE ONLY; no native host.")
